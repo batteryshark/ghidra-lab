@@ -85,13 +85,16 @@ boot; your human account is not):
 
 ```bash
 docker compose exec ghidra-server /opt/ghidra/server/svrAdmin -add <you> --p
+docker compose exec ghidra-server /opt/ghidra/server/svrAdmin -grant <you> +a GhidraLab
 ```
 
-Set `GHIDRA_LAB_REPO_USERS=<you>` in `.env` so the bootstrap grants you access to
-the repository (restart `ghidra-lab` to apply). Then open Ghidra on your desktop,
-**File → New Project → Shared Project**, connect to `<tailscale-ip>:13100` as
-`<you>`, and open the `GhidraLab` repository. The agent's imports and check-ins
-show up there with full version history.
+For fresh deployments, also set `GHIDRA_LAB_REPO_USERS=<you>` in `.env` before
+starting the stack so the bootstrap grants repository access automatically. If
+you add or change GUI users later, restart `ghidra-lab` after updating that
+setting, or run the `svrAdmin -grant` command above directly. Then open Ghidra
+on your desktop, **File → New Project → Shared Project**, connect to
+`<tailscale-ip>:13100` as `<you>`, and open the existing `GhidraLab` repository.
+The agent's imports and check-ins show up there with full version history.
 
 If the `agent` account ever fails to auto-create, make it the same way:
 `svrAdmin -add agent --p`.

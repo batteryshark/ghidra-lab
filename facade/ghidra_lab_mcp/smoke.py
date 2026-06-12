@@ -87,10 +87,12 @@ async def run() -> None:
             {"filename": "smoketrue", "collection": "smoke"},
         )
         sample_id = start["sample_id"]
-        put_url = f"{BASE}/uploads/{sample_id}"
+        put_url = start["upload_url"]
+        if put_url.startswith(settings.public_base_url):
+            put_url = f"{BASE}{put_url[len(settings.public_base_url):]}"
         with open(SAMPLE_BINARY, "rb") as fh:
             payload = fh.read()
-        req = urllib.request.Request(put_url, data=payload, method="PUT", headers=AUTH)
+        req = urllib.request.Request(put_url, data=payload, method="PUT")
         with urllib.request.urlopen(req) as resp:  # noqa: S310 (loopback)
             assert resp.status == 200, f"upload failed: {resp.status}"
         _say(f"uploaded {len(payload)} bytes as sample {sample_id}")
