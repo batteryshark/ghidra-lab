@@ -1,0 +1,15 @@
+# Secrets — never commit
+.env
+.env.local
+.ghidra-server-admin
+.ghidra-agent-password
+
+# Runtime state (repositories, projects, uploads, logs)
+data/
+
+# Python / OS cruft
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+*.tmp
