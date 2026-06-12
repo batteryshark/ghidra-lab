@@ -106,15 +106,25 @@ public final class BootstrapSharedProject {
             + locator.getMarkerFile());
     }
 
-    // Best-effort ACL grant. The repo's creator (agent) is already its admin;
-    // this opens it to the human GUI users. Failure is logged, not fatal: the
-    // user list can also be managed server-side with svrAdmin -grant.
+    // Best-effort ACL grant. Preserve any existing repository users, then ensure
+    // the agent and configured human GUI users are admins. Failure is logged, not
+    // fatal: the user list can also be managed server-side with svrAdmin -grant.
     private static void grantRepositoryUsers(RepositoryAdapter repository, String agentUser, String extra) {
         List<User> users = new ArrayList<>();
-        addUser(users, agentUser);
+        try {
+            for (User existing : repository.getUserList()) {
+                users.add(existing);
+            }
+        }
+        catch (Exception e) {
+            System.err.println("bootstrap: WARNING could not read repository ACL (" + e.getMessage()
+                + "); configured users will still be granted");
+        }
+
+        grantAdminUser(users, agentUser);
         for (String name : extra.split("[;,\\s]+")) {
             if (!name.trim().isEmpty()) {
-                addUser(users, name.trim());
+                grantAdminUser(users, name.trim());
             }
         }
         if (users.isEmpty()) {
@@ -130,10 +140,10 @@ public final class BootstrapSharedProject {
         }
     }
 
-    private static void addUser(List<User> users, String name) {
-        for (User existing : users) {
-            if (existing.getName().equals(name)) {
-                return;
+    private static void grantAdminUser(List<User> users, String name) {
+        for (int i = users.size() - 1; i >= 0; i--) {
+            if (users.get(i).getName().equals(name)) {
+                users.remove(i);
             }
         }
         users.add(new User(name, User.ADMIN));

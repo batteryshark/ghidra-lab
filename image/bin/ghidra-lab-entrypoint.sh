@@ -54,17 +54,12 @@ wait_for_tcp() {
 
 CLASSPATH="$(build_classpath)"
 
-# One-time creation of the local shared project bound to the server repository.
+# Creation/reconciliation of the local shared project bound to the server repository.
 # Soft-fail by design: if the Ghidra Server is unreachable or the agent account
 # is not provisioned yet, the lab still comes up and the sample/upload tools
 # work; the repository tools surface diagnostics until the project exists.
 bootstrap_shared_project() {
     local repo="${GHIDRA_LAB_DEFAULT_REPOSITORY:-GhidraLab}"
-    local marker="${GHIDRA_LAB_SHARED_PROJECT_ROOT:-/data/projects}/${repo}_agent.gpr"
-    if [[ -f "${marker}" ]]; then
-        echo "Shared project already present (${marker}); skipping bootstrap."
-        return 0
-    fi
     if [[ -z "${GHIDRA_SERVER_HOST:-}" || -z "${GHIDRA_SERVER_USER:-}" || -z "${GHIDRA_SERVER_PASSWORD:-}" ]]; then
         echo "Ghidra Server identity not fully configured; skipping shared-project bootstrap."
         return 0
