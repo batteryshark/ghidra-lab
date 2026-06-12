@@ -1,0 +1,2 @@
+"""Ghidra Lab FastMCP facade."""
+
