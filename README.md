@@ -80,15 +80,21 @@ Turn the listener off with `sudo tailscale serve --tcp=8081 off`.
 
 ## Your GUI flow
 
-Open Ghidra on your desktop, **File → New Project → Shared Project**, connect to
-`<tailscale-ip>:13100` as `admin`, and open the `GhidraLab` repository. The
-agent's imports and check-ins show up there with full version history.
-
-If the `agent` account ever fails to auto-create, make it once by hand:
+Create your own server account (the `agent` account is auto-created on first
+boot; your human account is not):
 
 ```bash
-docker compose exec ghidra-server /opt/ghidra/server/svrAdmin -add agent --p
+docker compose exec ghidra-server /opt/ghidra/server/svrAdmin -add <you> --p
 ```
+
+Set `GHIDRA_LAB_REPO_USERS=<you>` in `.env` so the bootstrap grants you access to
+the repository (restart `ghidra-lab` to apply). Then open Ghidra on your desktop,
+**File → New Project → Shared Project**, connect to `<tailscale-ip>:13100` as
+`<you>`, and open the `GhidraLab` repository. The agent's imports and check-ins
+show up there with full version history.
+
+If the `agent` account ever fails to auto-create, make it the same way:
+`svrAdmin -add agent --p`.
 
 ## Organizing work — one repo, folders per project
 
