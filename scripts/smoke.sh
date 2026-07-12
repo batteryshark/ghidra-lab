@@ -9,16 +9,23 @@ cd "$(dirname "$0")/.."
 BUILD=1
 [[ "${1:-}" == "--no-build" ]] && BUILD=0
 
+say()  { printf '\n=== %s ===\n' "$*"; }
+fail() { printf '\nSMOKE FAILED: %s\n' "$*" >&2; exit 1; }
+
+[[ -f .env ]] || fail ".env is missing; copy .env.example to .env and configure it"
+[[ -s .ghidra-agent-password ]] || fail ".ghidra-agent-password is missing or empty; generate it with: openssl rand -hex 24 > .ghidra-agent-password"
+
 # Read the few values we need without executing .env (values may contain spaces).
-get_env() { grep -E "^$1=" .env 2>/dev/null | tail -1 | cut -d= -f2-; }
+get_env() { sed -n "s/^$1=//p" .env | tail -1; }
 HOST_PORT="$(get_env GHIDRA_LAB_LOCAL_PORT)"; HOST_PORT="${HOST_PORT:-18080}"
 AGENT="$(get_env GHIDRA_AGENT_SERVER_USER)"; AGENT="${AGENT:-agent}"
 REPO="$(get_env GHIDRA_LAB_DEFAULT_REPOSITORY)"; REPO="${REPO:-GhidraLab}"
 SRV_HOST="$(get_env GHIDRA_AGENT_SERVER_HOST)"; SRV_HOST="${SRV_HOST:-ghidra-server}"
 SRV_PORT="$(get_env GHIDRA_AGENT_SERVER_PORT)"; SRV_PORT="${SRV_PORT:-13100}"
+MCP_BEARER="$(get_env GHIDRA_LAB_TOKEN)"
 
-say()  { printf '\n=== %s ===\n' "$*"; }
-fail() { printf '\nSMOKE FAILED: %s\n' "$*" >&2; exit 1; }
+[[ -n "${MCP_BEARER}" && "${MCP_BEARER}" != change-me-* ]] \
+    || fail "GHIDRA_LAB_TOKEN is unset or still uses the placeholder in .env"
 
 say "Docker daemon"
 docker info >/dev/null 2>&1 || fail "docker daemon not reachable"

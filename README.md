@@ -1,13 +1,17 @@
+<p align="center">
+  <img src="assets/ghidra-lab-logo-480.png" width="480" alt="Ghidra Lab dragon operating human and agent controls on a shared analysis console">
+</p>
+
 # Ghidra Lab
 
-A home-lab Ghidra you can drive two ways at once: **you** in the Ghidra GUI, and
-**an AI agent** over MCP — both working the same Ghidra Server repositories.
+A home-lab Ghidra for people who want to work in the desktop GUI while an AI
+agent works over MCP in the same Ghidra Server repositories.
 
 Two containers, one image:
 
 - **`ghidra-server`** — a stock Ghidra Server, the canonical store for your work.
-  Holds your repositories and user accounts (`admin` for you, `agent` for the
-  lab). Ports `13100-13102`.
+  Holds your repositories and user accounts (one you create for yourself, plus
+  the lab's `agent` account). Ports `13100-13102`.
 - **`ghidra-lab`** — the MCP endpoint. Runs the upstream
   [`bethington/ghidra-mcp`](https://github.com/bethington/ghidra-mcp) headless
   server and bridge plus a thin FastMCP facade that adds sample uploads and a
@@ -25,19 +29,32 @@ GhidraMCP prompts still apply. `list_tools` stays small (the lab tools plus
 `search_tools`/`call_tool`); the full upstream catalog is reachable through
 search.
 
+## Repository map
+
+- `facade/ghidra_lab_mcp/` — authenticated FastMCP facade, upload store, and
+  Ghidra Server orchestration.
+- `image/` — the shared Docker image, container entrypoints, shared-project
+  bootstrap, and the version-control extension injected into GhidraMCP.
+- `scripts/` — first-run initialization and the full upload, analysis,
+  repository, and check-in smoke test.
+- `tests/` — focused unit tests that do not require a running Ghidra stack.
+- `docker-compose.yml` — the Ghidra Server and MCP-facing lab services.
+
 ## Start
 
 ```bash
 git clone https://github.com/batteryshark/ghidra-lab.git
 cd ghidra-lab
-cp .env.example .env
-openssl rand -hex 32                              # → set GHIDRA_LAB_TOKEN in .env
-openssl rand -hex 24 > .ghidra-agent-password     # the agent account password
+scripts/init.sh
 docker compose up -d --build
 ```
 
-Edit `.env` for your network before `up` (see [Running on a server](#running-on-a-server-over-tailscale))
-and set `GHIDRA_VERSION` to match the Ghidra version your GUI runs.
+The generated `.env` uses loopback and the in-Compose server name, so the block
+above runs without host-specific addresses. For Tailscale access, edit the
+network values before `up` as described in
+[Running on a server](#running-on-a-server-over-tailscale). Set
+`GHIDRA_VERSION`, `GHIDRA_DATE`, and `GHIDRA_SHA256` together when changing the
+Ghidra release; the version must match the Ghidra version your GUI runs.
 
 The `ghidra-server` container creates the `agent` account on first boot from
 `.ghidra-agent-password`; the `ghidra-lab` container creates a server-bound
@@ -58,6 +75,16 @@ Authorization: Bearer <GHIDRA_LAB_TOKEN>
 ```
 
 Turn the listener off with `sudo tailscale serve --tcp=8081 off`.
+
+## Security boundary
+
+Ghidra Lab is a trusted-user home-lab service, not a hardened multi-tenant
+sandbox. Keep the MCP endpoint on a private network such as Tailscale and do not
+publish ports `13100-13102` or `18080` to the internet. The facade requires the
+`GHIDRA_LAB_TOKEN`; sample upload and download URLs carry per-sample bearer
+tokens in the URL. Download tokens remain valid until the sample is deleted, so
+treat those URLs as secrets. Analyze untrusted binaries only on a host where you
+accept the risk of running Ghidra and its analyzers against them.
 
 ## Agent flow
 
@@ -119,10 +146,6 @@ file added outside the agent's session is found and round-tripped to a new
 version.) The reverse works too: you open what the agent imported. Standard
 Ghidra checkout locking applies — whoever holds an exclusive checkout edits until
 they check in.
-
-If you ever want hard isolation (a *separate repository* per engagement, or the
-agent attaching to a repo you created as its own shared project), that's a small
-generalization on top of this — ask and it can be added.
 
 ## Pinned tools
 

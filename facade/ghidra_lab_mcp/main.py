@@ -592,7 +592,7 @@ app = FastAPI(
 @app.middleware("http")
 async def bearer_auth(request: Request, call_next):
     path = request.url.path
-    # /uploads and /downloads carry their own per-sample one-time token, validated
+    # /uploads and /downloads carry their own per-sample bearer token, validated
     # in the handlers, so an agent can transfer files without holding the MCP
     # bearer token (which only its harness has).
     if (
