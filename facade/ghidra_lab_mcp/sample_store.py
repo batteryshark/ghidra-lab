@@ -177,6 +177,8 @@ class SampleStore:
             manifest.update(
                 {
                     "status": "complete",
+                    # Invalidate the upload URL before issuing download URLs.
+                    "token": secrets.token_urlsafe(24),
                     "project": project,
                     "collection": collection,
                     "filename": filename,

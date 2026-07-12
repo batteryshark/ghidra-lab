@@ -1,9 +1,11 @@
-ARG GHIDRA_VERSION=12.1
-ARG GHIDRA_DATE=20260513
+ARG GHIDRA_VERSION=12.1.2
+ARG GHIDRA_DATE=20260605
+ARG GHIDRA_SHA256=b62e81a0390618466c019c60d8c2f796ced2509c4c1aea4a37644a77272cf99d
 
 FROM eclipse-temurin:21-jdk AS builder
 ARG GHIDRA_VERSION
 ARG GHIDRA_DATE
+ARG GHIDRA_SHA256
 ARG GHIDRA_MCP_REPO=https://github.com/bethington/ghidra-mcp.git
 ARG GHIDRA_MCP_REF=378f727b7059163eb6ba3ae315c4d9233decba66
 
@@ -11,10 +13,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates git maven unzip wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q --no-check-certificate -O /tmp/ghidra.zip \
+RUN wget -q -O /tmp/ghidra.zip \
     "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_${GHIDRA_VERSION}_build/ghidra_${GHIDRA_VERSION}_PUBLIC_${GHIDRA_DATE}.zip" \
-    || wget -q --no-check-certificate -O /tmp/ghidra.zip \
-    "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_${GHIDRA_VERSION}_build/ghidra_${GHIDRA_VERSION}_PUBLIC.zip" \
+    && echo "${GHIDRA_SHA256}  /tmp/ghidra.zip" | sha256sum --check --strict \
     && unzip -q /tmp/ghidra.zip -d /opt \
     && mv /opt/ghidra_${GHIDRA_VERSION}_PUBLIC /opt/ghidra \
     && rm /tmp/ghidra.zip
