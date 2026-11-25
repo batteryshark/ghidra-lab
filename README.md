@@ -225,3 +225,8 @@ tests.
 - The Apple-Silicon decompiler native is absent from the stock Ghidra release,
   so `decompile_*` tools fail on an arm64 host; disassembly, function listing,
   and annotation all still work. The x86-64 VM is unaffected.
+
+## License
+
+MIT. See [LICENSE](LICENSE). Ghidra and the other tools the image downloads at
+build time keep their own licences.
